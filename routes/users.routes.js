@@ -1,7 +1,10 @@
 import express from "express";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import * as dotenv from "dotenv";
 
 const router = express.Router();
+dotenv.config()
 
 const users = []
 
@@ -14,8 +17,6 @@ router.route('/').post(async(req, res) => {
         const salt = await bcrypt.genSalt()
         const hashedPass = await bcrypt.hash(req.body.password, salt)
         const user = { name: req.body.name , password: hashedPass }
-        console.log(salt)
-        console.log(hashedPass)
         users.push(user)
         res.status(201).send()
     } catch(error) {
@@ -31,7 +32,9 @@ router.route('/login').post(async (req, res) => {
     }
     try{
         if(await bcrypt.compare(req.body.password, user.password)) {
-            res.status(200).send("Log in successful")
+            const authUser = { name: req.body.name }
+            const accessToken = jwt.sign(authUser, process.env.ACCESS_TOKEN)
+            res.status(200).json({accessToken: accessToken})
         } else{
             res.status(400).send("Log in rejected")
         }
