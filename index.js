@@ -1,16 +1,26 @@
-import usersRoute from "./routes/users.routes.js"
-import express from 'express'
+import usersRoute from "./routes/users.routes.js";
+import express from "express";
 import cors from "cors";
-import run from './db/connection.js'
+import mongoose from "mongoose";
+import * as dotenv from "dotenv";
 
-const app = express()
+dotenv.config()
 
-app.use(express.json())
-app.use(cors())
+const app = express();
 
-app.use('/api/users', usersRoute);
+app.use(express.json());
+app.use(cors());
 
-app.listen(8080, ()=>{
-    run();
-    console.log("Server Running!");
-})
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+mongoose.connection.on("connected", () => {
+  console.log("Connected to MongoDB");
+});
+
+app.use("/api/users", usersRoute);
+
+app.listen(8080, () => {
+  console.log("Server Running!");
+});

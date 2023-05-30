@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
+import { MongoClient } from "mongodb";
 
 const router = express.Router();
 dotenv.config()
@@ -17,6 +18,13 @@ router.route('/').post(async(req, res) => {
         const salt = await bcrypt.genSalt()
         const hashedPass = await bcrypt.hash(req.body.password, salt)
         const user = { name: req.body.name , password: hashedPass }
+        
+        const client = new MongoClient(process.env.MONGO_URI);
+        await client.connect();
+        const collection = client.db("MernTestbyJ").collection("users");
+        collection.insertOne(user);
+        await client.close();
+
         users.push(user)
         res.status(201).send()
     } catch(error) {
