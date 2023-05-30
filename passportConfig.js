@@ -1,21 +1,41 @@
-import LocalStrategy from "passport-local";
+import {Strategy as LocalStrategy} from "passport-local";
 import User from "./models/Users.js";
 
 export default function initializePassport(passport) {
   passport.use(
-    new LocalStrategy(function (email, password, done) {
-      User.findOne({ email: email }, function (err, user) {
-        if (err) {
-          return done(err);
-        }
+    new LocalStrategy({ usernameField: "email" }, async function (email, password, done) {
+      try {
+        const user = await User.findOne({ email: email });
         if (!user) {
           return done(null, false, { message: "Incorrect username" });
         }
-        if (!user.comparePassword(password)) {
+        if (!(await user.comparePassword(password))) {
           return done(null, false, { message: "Incorrect password" });
         }
         return done(null, user);
-      });
+      } catch (error) {
+        return done(error);
+      }
     })
   );
+
+  passport.serializeUser((user, done) => {
+    done(null, user.id)
+  })
+
+  passport.deserializeUser(async (id, done) => {
+    try{
+      const user = await User.findById(id)
+      done(null, user);
+
+    } catch(error) {
+      done(error, false);
+    }
+  })
+}
+
+export function isAuthenticated(req, res, done) {
+  if(req.user) return done();
+
+  res.status(400).send("User not authenticated")
 }

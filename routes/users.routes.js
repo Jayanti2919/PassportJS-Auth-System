@@ -1,6 +1,4 @@
 import express from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import User from "../models/Users.js";
 import passport from "passport";
@@ -30,7 +28,7 @@ router.route("/").post(async (req, res) => {
 
 router.route("/login").post(
   // Move passport.authenticate("local") after expressSession middleware
-  passport.authenticate("local"),
+  passport.authenticate("local", { failureFlash: true }),
   async (req, res) => {
     res.status(200).send("Logged in");
   }
