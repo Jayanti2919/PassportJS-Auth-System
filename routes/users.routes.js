@@ -3,9 +3,13 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import User from "../models/Users.js";
+import passport from "passport";
+import initializingPassport from "../passportConfig.js";
 
 const router = express.Router();
 dotenv.config();
+
+initializingPassport(passport);
 
 const users = [];
 
@@ -24,25 +28,12 @@ router.route("/").post(async (req, res) => {
   }
 });
 
-router.route("/login").post(async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    res.status(200).send("Log in successful");
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+router.route("/login").post(
+  // Move passport.authenticate("local") after expressSession middleware
+  passport.authenticate("local"),
+  async (req, res) => {
+    res.status(200).send("Logged in");
   }
-});
+);
 
 export default router;
